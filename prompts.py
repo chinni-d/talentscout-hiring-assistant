@@ -54,27 +54,40 @@ DIRECTIONS:
     return prompt
 
 def build_followup_prompt(user_message, conversation, generated_questions):
-    # Provide short context: last assistant content + generated questions
-    last_assistant = ""
+    # Build comprehensive context
+    conversation_context = ""
     if conversation:
-        for role, text in reversed(conversation):
-            if role == "assistant":
-                last_assistant = text
-                break
-    # include generated_questions summary
-    summary_lines = []
+        recent_exchanges = conversation[-6:]  # Last 3 exchanges (user + assistant pairs)
+        for role, text in recent_exchanges:
+            conversation_context += f"{role.capitalize()}: {text}\n"
+    
+    # Include the actual generated questions for context
+    questions_context = ""
     for tech, qlist in generated_questions.items():
-        summary_lines.append(f"{tech}: {len(qlist)} questions")
-    summary = "; ".join(summary_lines)
+        questions_context += f"\n{tech} Questions:\n"
+        for i, question in enumerate(qlist, 1):
+            questions_context += f"  {i}. {question}\n"
+    
     prompt = f"""
-User follow-up: "{user_message}"
-Context summary: {summary}
-Last assistant message: "{last_assistant}"
+You are TalentScout's assistant helping with technical screening. 
 
-Instructions:
-- Answer the user's query concisely related to technical screening or to the generated questions.
-- If the user asks to modify or regenerate questions, follow the original constraints (3-5 questions per tech).
-- If the user asks to end conversation, return a short confirmation like 'Conversation ended. Thank you.'
-- If you cannot answer, reply with a helpful fallback message that asks for clarifying or offers alternatives but do not deviate from screening purpose.
+CONVERSATION HISTORY:
+{conversation_context}
+
+GENERATED QUESTIONS:
+{questions_context}
+
+USER'S CURRENT MESSAGE: "{user_message}"
+
+INSTRUCTIONS:
+- Provide contextual help related to the screening process or the specific questions generated
+- If asked to rephrase a question, provide a clearer version
+- If asked to dig deeper, provide follow-up questions or explain the technical concept
+- If asked for sample answers, provide brief example responses that a good candidate might give
+- If asked to modify questions, suggest specific improvements
+- Stay focused on technical screening and don't deviate to other topics
+- Be concise but helpful (2-3 sentences maximum)
+
+Respond directly to the user's request with relevant, actionable information.
 """
     return prompt
