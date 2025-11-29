@@ -23,3 +23,5 @@ A Streamlit-based Hiring Assistant that collects candidate info and generates ta
 1. Clone repository.
 2. Create a virtualenv and activate it.
 3. Install dependencies:
+
+Live: https://manikantadarapureddy.streamlit.app
